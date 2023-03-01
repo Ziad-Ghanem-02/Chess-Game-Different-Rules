@@ -1,0 +1,964 @@
+.MODEL SMALL
+.STACK 100
+.DATA  
+DrawINDEX DB ?
+GridArr DW 1Ah, 06h, 18h, 00Eh, 1Ch, 08h, 16h, 00Ah
+	    DW 02h, 12h, 02h, 12h, 02h, 12h, 02h, 12h
+	    DW 10h, 00h, 10h, 00h, 10h, 00h, 10h, 00h
+	    DW 00h, 10h, 00h, 10h, 00h, 10h, 00h, 10h
+	    DW 10h, 00h, 10h, 00h, 10h, 00h, 10h, 00h
+	    DW 00h, 10h, 00h, 10h, 00h, 10h, 00h, 10h 
+        DW 11h, 01h, 11h, 01h, 11h, 01h, 11h, 01h
+	    DW 05h, 13h, 04h, 1Dh, 0Bh, 14h, 03h, 15h
+	    
+AVAILARR DB 64 DUP(0)
+.CODE                   
+
+AvailableSquares PROC FAR
+    
+   
+    
+    ;PUTTING THE COORDS AND THEN CALLING THE COORDS TO INDEX
+    MOV CX,0
+    MOV DX,0 
+     
+    LEA SI,AVAILARR
+    ;TODO checking for which piece this is 
+    JZ WK    ;WHITE KING
+    JZ WQ    ;WHITE QUEEN
+    JZ WB    ;WHITE BISHOP
+    JZ WKN   ;WHITE KNIGHT
+    JZ WR    ;WHITE ROOK 
+    JZ WPA   ;WHITE PAWN 
+    JZ BK    ;BLACK KING
+    JZ BQ    ;BLACK QUEEN
+    JZ BB    ;BLACK BISHOP
+    JZ BKN   ;BLACK KNIGHT
+    JZ BR    ;BLACK ROOK 
+    JZ BPA   ;BLACK PAWN
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+     WK:
+     ;FIRST MOVE
+     PUSH DX
+     ADD DX,20
+     CALL COORDSTOINDEX
+     
+     ;INDEX IS NOW IN THE DRAWINDEX VARIABLE
+     MOV BH,00
+     MOV BL,DRAWINDEX
+     
+     ;ALTERING THE VALUE IN THE ARRAY
+     MOV AVAILARR[SI+BX],1 
+     
+     ;DRAWING THE SQUARE GREY
+     CALL DRAWGREY
+     
+     ;TO GET THE ORIGINAL COORDS
+     POP DX
+     
+     ;SECOND MOVE
+     PUSH CX
+     ADD CX,20
+     CALL FUNC
+     POP CX
+     
+     ;THIRD MOVE
+     PUSH CX
+     SUB CX,20
+     CALL FUNC
+     POP CX
+     
+     ;FOURTH MOVE
+     PUSH DX
+     SUB DX,20
+     CALL FUNC
+     POP DX
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+     
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         
+     WQ:
+     ;MOVING TO THE RIGHT
+     PUSH CX
+     
+     MOVEWQ1:
+     ADD CX,20
+     CALL FUNC
+     CMP CX,160
+     JNZ MOVEWQ1
+     
+     POP CX
+     
+     ;MOVING TO THE LEFT
+     PUSH CX
+     
+     MOVEWQ2:
+     SUB CX,20
+     CALL FUNC
+     CMP CX,0
+     JNZ MOVEWQ2
+     
+     POP CX
+     
+     ;MOVING UP
+     PUSH DX 
+     
+     MOVEWQ3:
+     SUB DX,20
+     CALL FUNC
+     CMP DX,0
+     JNZ MOVEWQ3
+     
+     POP DX
+     
+     ;MOVING DOWN
+     PUSH DX  
+     
+     MOVEWQ4:
+     ADD DX,20
+     CALL FUNC 
+     CMP DX,160
+     JNZ MOVEWQ4
+     
+     POP DX
+     
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+     
+  
+     
+     
+     
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+        
+     WB: 
+     ;MOVING DIAGONALLY UP AND RIGHT
+     PUSH CX
+     PUSH DX
+     
+     MOVEWB1:
+     SUB DX,20
+     ADD CX,20
+     CALL FUNC 
+     
+     CMP CX,160 
+     JZ WBLABEL1
+     CMP DX,0
+     JNZ MOVEWB1
+     
+     WBLABEL1:
+     POP DX
+     POP CX
+     
+     
+     ;MOVING DIAGONALLY DOWN AND RIGHT
+     PUSH CX
+     PUSH DX
+     
+     MOVEWB2:
+     ADD DX,20
+     ADD CX,20
+     CALL FUNC 
+     
+     CMP CX,160 
+     JZ WBLABEL2
+     CMP DX,160
+     JNZ MOVEWB2
+     
+     WBLABEL2:
+     POP DX
+     POP CX
+     
+     
+     ;MOVING DIAGONALLY UP AND LEFT
+     PUSH CX
+     PUSH DX
+     
+     MOVEWB3:
+     SUB DX,20
+     SUB CX,20
+     CALL FUNC 
+     
+     CMP CX,0 
+     JZ WBLABEL3
+     CMP DX,0
+     JNZ MOVEWB3
+     
+     WBLABEL3:
+     POP DX
+     POP CX   
+     
+     ;MOVING DIAGONALLY LEFT AND DOWN
+     PUSH CX
+     PUSH DX
+     
+     MOVEWB4:
+     ADD DX,20
+     SUB CX,20
+     CALL FUNC 
+     
+     CMP CX,0 
+     JZ WBLABEL4
+     CMP DX,160
+     JNZ MOVEWB4
+     
+     WBLABEL4:
+     POP DX
+     POP CX
+    
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES 
+     
+ 
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       
+     WKN:
+     ;MOVE1
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN1:
+     ADD CX,20
+     ADD DX,40
+     CALL FUNC
+     
+     CMP CX,160
+     JZ WKNLABEL1
+     CMP DX,160
+     JNZ MOVEWKN1
+     
+     WKNLABEL1:
+     POP DX
+     POP CX
+     
+     
+     ;MOVE2
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN2:
+     SUB CX,20
+     ADD DX,40
+     CALL FUNC
+     
+     CMP CX,1
+     JZ WKNLABEL2
+     CMP DX,160
+     JNZ MOVEWKN2
+     
+     WKNLABEL2:
+     POP DX
+     POP CX
+     
+     ;MOVE3
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN3:
+     ADD CX,20
+     SUB DX,40
+     CALL FUNC
+     
+     CMP CX,160
+     JZ WKNLABEL3
+     CMP DX,1
+     JNZ MOVEWKN3
+     
+     WKNLABEL3:
+     POP DX
+     POP CX
+     
+     ;MOVE4
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN4:
+     SUB CX,20
+     SUB DX,40
+     CALL FUNC
+     
+     CMP CX,1
+     JZ WKNLABEL4
+     CMP DX,1
+     JNZ MOVEWKN4
+     
+     WKNLABEL4:
+     POP DX
+     POP CX
+     
+     ;MOVE5
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN5:
+     ADD CX,40
+     SUB DX,20
+     CALL FUNC
+     
+     CMP CX,160
+     JGE WKNLABEL5
+     CMP DX,1
+     JNLE MOVEWKN5
+     
+     WKNLABEL5:
+     POP DX
+     POP CX
+     
+     ;MOVE6
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN6:
+     SUB CX,40
+     SUB DX,20
+     CALL FUNC
+     
+     CMP CX,1
+     JLE WKNLABEL6
+     CMP DX,1
+     JNLE MOVEWKN6
+     
+     WKNLABEL6:
+     POP DX
+     POP CX
+     
+     ;MOVE7
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN7:
+     ADD CX,40
+     ADD DX,20
+     CALL FUNC
+     
+     CMP CX,160
+     JGE WKNLABEL7
+     CMP DX,160
+     JNGE MOVEWKN7
+     
+     WKNLABEL7:
+     POP DX
+     POP CX
+     
+     ;MOVE8
+     PUSH CX
+     PUSH DX
+     
+     MOVEWKN8:
+     SUB CX,40
+     ADD DX,20
+     CALL FUNC
+     
+     CMP CX,1
+     JLE WKNLABEL8
+     CMP DX,160
+     JNGE MOVEWKN8
+     
+     WKNLABEL8:
+     POP DX
+     POP CX
+      ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES   
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     WR:;MOVING UP 
+     
+     PUSH DX
+     
+     WRMOVE1:
+     SUB DX,20
+     CALL FUNC
+     CMP DX,0
+     JNZ WRMOVE1
+     
+     POP DX
+     
+     
+    ;MOVING DOWN
+    
+    PUSH DX
+    
+    WRMOVE2:
+    ADD DX,20
+    CALL FUNC
+    CMP DX,160
+    JNZ WRMOVE2
+    
+    POP DX 
+     
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES     
+     
+     
+     
+     
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     WPA:
+     ;MOVING ONE STEP UP
+     PUSH DX
+     SUB DX,20
+     CALL FUNC
+     POP DX
+      ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+     
+     
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+     BK:
+      PUSH DX
+     ADD DX,20
+     CALL COORDSTOINDEX
+     
+     ;INDEX IS NOW IN THE DRAWINDEX VARIABLE
+     MOV BH,00
+     MOV BL,DRAWINDEX
+     
+     ;ALTERING THE VALUE IN THE ARRAY
+     MOV AVAILARR[SI+BX],1 
+     
+     ;DRAWING THE SQUARE GREY
+     CALL DRAWGREY
+     
+     ;TO GET THE ORIGINAL COORDS
+     POP DX
+     
+     ;SECOND MOVE
+     PUSH CX
+     ADD CX,20
+     CALL FUNC
+     POP CX
+     
+     ;THIRD MOVE
+     PUSH CX
+     SUB CX,20
+     CALL FUNC
+     POP CX
+     
+     ;FOURTH MOVE
+     PUSH DX
+     SUB DX,20
+     CALL FUNC
+     POP DX
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         
+     BQ:
+     ;MOVING TO THE RIGHT
+     PUSH CX
+     
+     MOVEBQ1:
+     ADD CX,20
+     CALL FUNC
+     CMP CX,160
+     JNZ MOVEBQ1
+     
+     POP CX
+     
+     ;MOVING TO THE LEFT
+     PUSH CX
+     
+     MOVEBQ2:
+     SUB CX,20
+     CALL FUNC
+     CMP CX,0
+     JNZ MOVEBQ2
+     
+     POP CX
+     
+     ;MOVING UP
+     PUSH DX 
+     
+     MOVEBQ3:
+     SUB DX,20
+     CALL FUNC
+     CMP DX,0
+     JNZ MOVEBQ3
+     
+     POP DX
+     
+     ;MOVING DOWN
+     PUSH DX  
+     
+     MOVEBQ4:
+     ADD DX,20
+     CALL FUNC 
+     CMP DX,160
+     JNZ MOVEBQ4
+     
+     POP DX    
+     
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     BB:
+     ;MOVING DIAGONALLY UP AND RIGHT
+     PUSH CX
+     PUSH DX
+     
+     MOVEBB1:
+     SUB DX,20
+     ADD CX,20
+     CALL FUNC 
+     
+     CMP CX,160 
+     JZ BBLABEL1
+     CMP DX,0
+     JNZ MOVEBB1
+     
+     BBLABEL1:
+     POP DX
+     POP CX
+     
+     
+     ;MOVING DIAGONALLY DOWN AND RIGHT
+     PUSH CX
+     PUSH DX
+     
+     MOVEBB2:
+     ADD DX,20
+     ADD CX,20
+     CALL FUNC 
+     
+     CMP CX,160 
+     JZ BBLABEL2
+     CMP DX,160
+     JNZ MOVEBB2
+     
+     BBLABEL2:
+     POP DX
+     POP CX
+     
+     
+     ;MOVING DIAGONALLY UP AND LEFT
+     PUSH CX
+     PUSH DX
+     
+     MOVEBB3:
+     SUB DX,20
+     SUB CX,20
+     CALL FUNC 
+     
+     CMP CX,0 
+     JZ BBLABEL3
+     CMP DX,0
+     JNZ MOVEBB3
+     
+     BBLABEL3:
+     POP DX
+     POP CX   
+     
+     ;MOVING DIAGONALLY LEFT AND DOWN
+     PUSH CX
+     PUSH DX
+     
+     MOVEBB4:
+     ADD DX,20
+     SUB CX,20
+     CALL FUNC 
+     
+     CMP CX,0 
+     JZ BBLABEL4
+     CMP DX,160
+     JNZ MOVEBB4
+     
+     BBLABEL4:
+     POP DX
+     POP CX
+      ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES
+     
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         
+     BKN: 
+     
+     ;MOVE1
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN1:
+     ADD CX,20
+     ADD DX,40
+     CALL FUNC
+     
+     CMP CX,160
+     JZ BKNLABEL1
+     CMP DX,160
+     JNZ MOVEBKN1
+     
+     BKNLABEL1:
+     POP DX
+     POP CX
+     
+     
+     ;MOVE2
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN2:
+     SUB CX,20
+     ADD DX,40
+     CALL FUNC
+     
+     CMP CX,1
+     JZ BKNLABEL2
+     CMP DX,160
+     JNZ MOVEBKN2
+     
+     BKNLABEL2:
+     POP DX
+     POP CX
+     
+     ;MOVE3
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN3:
+     ADD CX,20
+     SUB DX,40
+     CALL FUNC
+     
+     CMP CX,160
+     JZ BKNLABEL3
+     CMP DX,1
+     JNZ MOVEBKN3
+     
+     BKNLABEL3:
+     POP DX
+     POP CX
+     
+     ;MOVE4
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN4:
+     SUB CX,20
+     SUB DX,40
+     CALL FUNC
+     
+     CMP CX,1
+     JZ BKNLABEL4
+     CMP DX,1
+     JNZ MOVEBKN4
+     
+     BKNLABEL4:
+     POP DX
+     POP CX
+     
+     ;MOVE5
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN5:
+     ADD CX,40
+     SUB DX,20
+     CALL FUNC
+     
+     CMP CX,160
+     JGE BKNLABEL5
+     CMP DX,1
+     JNLE OVEBKN5
+     
+     BKNLABEL5:
+     POP DX
+     POP CX
+     
+     ;MOVE6
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN6:
+     SUB CX,40
+     SUB DX,20
+     CALL FUNC
+     
+     CMP CX,1
+     JLE BKNLABEL6
+     CMP DX,1
+     JNLE MOVEBKN6
+     
+     BKNLABEL6:
+     POP DX
+     POP CX
+     
+     ;MOVE7
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN7:
+     ADD CX,40
+     ADD DX,20
+     CALL FUNC
+     
+     CMP CX,160
+     JGE BKNLABEL7
+     CMP DX,160
+     JNGE MOVEBKN7
+     
+     BKNLABEL7:
+     POP DX
+     POP CX
+     
+     ;MOVE8
+     PUSH CX
+     PUSH DX
+     
+     MOVEBKN8:
+     SUB CX,40
+     ADD DX,20
+     CALL FUNC
+     
+     CMP CX,1
+     JLE BKNLABEL8
+     CMP DX,160
+     JNGE MOVEBKN8
+     
+     BKNLABEL8:
+     POP DX
+     POP CX
+     
+     
+      
+      
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     BR:
+     ;MOVING UP 
+     
+     PUSH DX
+     
+     BRMOVE1:
+     SUB DX,20
+     CALL FUNC
+     CMP DX,0
+     JNZ BRMOVE1
+     
+     POP DX
+     
+     
+    ;MOVING DOWN
+    
+    PUSH DX
+    
+    BRMOVE2:
+    ADD DX,20
+    CALL FUNC
+    CMP DX,160
+    JNZ BRMOVE2
+    
+    POP DX 
+     
+      
+    ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES     
+     
+     
+     
+     
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;     
+     BPA:
+     
+     ;MOVING DOWN ONE STEP
+     PUSH DX
+     ADD DX,20
+     CALL FUNC
+     POP DX
+     ;TODO JUMP TO SELECTING ONE OF THE AVAILABLE SQUARES 
+    
+    
+    
+    
+   
+    
+  RET  
+    
+AvailableSquares ENDP
+
+
+
+
+
+
+
+
+
+ 
+DRAWGREY PROC FAR 
+        
+        
+        ;THIS FUNCTION MAINTAINS THE VALUES OF CX AND DX AND SI AFTER EXECUTION
+
+ PUSH SI
+ PUSH CX
+ PUSH DX
+       
+        
+        MOV AL,7H
+        
+        MOV SI,CX
+        ADD SI,20 
+      
+        
+        
+        MOV DI,DX
+        ADD DI,20
+
+       
+        ;LOOP TO DRAW THE ROWS
+        DRAW:
+         
+        MOV AH,0CH
+        INT 10H
+        INC CX
+        CMP CX,SI
+        JNE DRAW
+       
+        ;INCREMENTING THE VALUE TO DRAW THE NEXT ROW
+        MOV CX,SI
+        SUB CX,20
+        INC DX
+        CMP DX,DI
+        JNE DRAW
+        
+        ;RESTORING THE VALUES OF CX AND DX
+        POP DX
+        PUSH CX
+        POP SI
+        RET
+        
+DRAWGREY ENDP 
+
+
+
+
+
+
+
+FUNC PROC FAR 
+
+     CALL COORDSTOINDEX
+     MOV BH,00
+     MOV BL,DRAWINDEX
+     MOV AVAILARR[SI+BX],1
+     CALL DRAWGREY
+     
+     RET
+     
+ENDP FUNC
+
+
+
+CoordsToIndex PROC FAR
+    
+    MOV AX,@DATA
+    MOV DS,AX
+    
+    LEA SI,GridArr 
+    
+    
+    ;THE DIVISOR AND THE COORDS
+    MOV BL,20
+    
+    MOV CX,20
+    MOV DX,60 
+    
+    ;PUSHING THE CX AND DX TO MAINTAIN THEIR VALUE 
+    PUSH CX
+    PUSH DX  
+    
+  
+    
+    
+    ;DIVIDING THE COLUMN PART AND INCREMENTING THE FINAL ANSWER
+    MOV AX,CX
+    DIV BL
+    
+    MOV DrawIndex,AL
+    
+    ;DIVIDING THE ROW PART
+    MOV AX,DX
+    DIV BL
+    
+    MOV CL,AL
+    
+    ;INSTEAD OF MULTIPLYING
+    MOV AL,0
+    ADDING:
+    ADD AL,8
+    DEC CL
+    JNZ ADDING
+    
+    
+    ;ADDING TO GET THE FINAL INDEX
+    ADD DrawIndex,AL
+  
+    ;DOUBLING THE VALUE AS THE ARR IS WORD
+    MOV AL,DrawIndex
+    ADD AL,AL
+    MOV DrawIndex,AL
+    
+    ;STORING THE FINAL ARRAY ELEMENT IN BX
+    MOV BL,DrawIndex
+    MOV BH,00 
+    
+    MOV BX,[SI+BX]
+    
+    
+    ;POPPING CX AND DX TO RESTORE THEIR VALUE
+    POP CX 
+    POP DX
+    
+    RET
+    
+    
+CoordsToIndex ENDP 
+
+ 
+ 
+ 
+MAIN PROC FAR
+ MOV AX,@DATA
+ MOV DS,AX
+ CALL AvailableSquares     
+ 
+
+ENDP MAIN 
+END MAIN 
